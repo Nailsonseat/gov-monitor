@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, JSON, Text, func
-from gov_monitor.database import Base
+from src.database import Base
 
 
 class NormalizedMetric(Base):

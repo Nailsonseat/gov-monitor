@@ -1,7 +1,7 @@
 from google import genai
 from sqlalchemy.orm import Session
-from gov_monitor.config import Config
-from gov_monitor.schemas.models import NormalizedMetric, ExecutiveSummary
+from src.config import Config
+from src.schemas.models import NormalizedMetric, ExecutiveSummary
 
 
 def generate_llm_intelligence(db: Session):

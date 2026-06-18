@@ -1,8 +1,8 @@
-from gov_monitor.database import init_db, SessionLocal
-from gov_monitor.ingestion.signals import SIGNAL_EXTRACTORS
-from gov_monitor.pipeline.scoring import calculate_confidence
-from gov_monitor.schemas.models import NormalizedMetric
-from gov_monitor.pipeline.synthesizer import generate_llm_intelligence
+from src.database import init_db, SessionLocal
+from src.ingestion.signals import SIGNAL_EXTRACTORS
+from src.pipeline.scoring import calculate_confidence
+from src.schemas.models import NormalizedMetric
+from src.pipeline.synthesizer import generate_llm_intelligence
 
 
 def run_pipeline():

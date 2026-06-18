@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "psycopg2-binary>=2.9.9",
+    "sqlalchemy-cockroachdb>=2.0.2",
     "sqlalchemy>=2.0.29",
     "pydantic>=2.7.0",
     "requests>=2.31.0",
@@ -13,12 +14,18 @@ dependencies = [
     "python-dotenv>=1.0.1",
 ]
 
+[project.scripts]
+start = "src.main:run_pipeline"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.uv]
-dev-dependencies = [
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[dependency-groups]
+dev = [
     "black>=24.3.0",
     "isort>=5.13.2",
 ]
