@@ -1,0 +1,21 @@
+services:
+  pipeline:
+    build: .
+    container_name: gov_monitor_pipeline
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - DATA_GOV_IN_API_KEY=${DATA_GOV_IN_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - TARGET_CITY=${TARGET_CITY}
+      - TARGET_DISTRICT=${TARGET_DISTRICT}
+      - LANGUAGE_TARGET=${LANGUAGE_TARGET}
+    restart: on-failure
+
+  metabase:
+    image: metabase/metabase:v0.49.3
+    container_name: gov_monitor_dashboard
+    ports:
+      - "3000:3000"
+    environment:
+      - MB_JETTY_PORT=3000
+    restart: unless-stopped
