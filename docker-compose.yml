@@ -13,10 +13,13 @@ services:
     restart: on-failure
 
   metabase:
-    image: metabase/metabase:v0.49.3
+    image: metabase/metabase:v0.62.2
     container_name: gov_monitor_dashboard
     ports:
       - "3000:3000"
     environment:
       - MB_JETTY_PORT=3000
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     restart: unless-stopped

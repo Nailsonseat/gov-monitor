@@ -14,6 +14,7 @@ class BaseGovExtractor:
 
     def fetch_raw(self) -> List[Dict[str, Any]]:
         print(f"-> Attempting live pull for [{self.metric_name}] via OGD API...")
+
         params = {
             "api-key": Config.DATA_GOV_API_KEY,
             "format": "json",
@@ -25,8 +26,11 @@ class BaseGovExtractor:
             filter_val = Config.TARGET_CITY if self.filter_column.lower() == "city" else Config.TARGET_DISTRICT
             params[f"filters[{self.filter_column}]"] = filter_val
 
+        # --- THE FIREWALL BYPASS HEADERS ---
+        # Mimics the exact successful request from your browser network tab
         headers = {
-            "Accept": "application/xml",
+            "User-Agent": "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36",
+            "Accept": "application/json, text/plain, */*",
             "Accept-Language": "en",
             "Connection": "keep-alive"
         }
