@@ -1,0 +1,36 @@
+services:
+  # 1. The ETL Ingestion Daemon
+  - type: worker
+    name: gov-monitor-pipeline
+    env: docker
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false 
+      - key: DB_CA_CERT
+        sync: false
+      - key: DATA_GOV_IN_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: TARGET_CITY
+        value: "Pune"
+      - key: TARGET_DISTRICT
+        value: "Pune"
+      - key: LANGUAGE_TARGET
+        value: "Marathi"
+
+  # 2. The Metabase Dashboard
+  - type: web
+    name: gov-monitor-dashboard
+    env: image
+    image:
+      url: docker.io/metabase/metabase:v0.62.2
+    plan: free
+    envVars:
+      # Instructs Metabase to store its application state (users/dashboards) in Postgres/Cockroach
+      - key: MB_DB_TYPE
+        value: "postgres"
+      # The connection string will be provided securely in the Render dashboard
+      - key: MB_DB_CONNECTION_URI
+        sync: false
