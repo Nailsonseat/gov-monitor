@@ -1,6 +1,6 @@
 services:
-  # 1. The ETL Ingestion Daemon
-  - type: worker
+  # 1. The ETL Ingestion Daemon (Now disguised as a web service)
+  - type: web
     name: gov-monitor-pipeline
     env: docker
     plan: free
@@ -28,9 +28,7 @@ services:
       url: docker.io/metabase/metabase:v0.62.2
     plan: free
     envVars:
-      # Instructs Metabase to store its application state (users/dashboards) in Postgres/Cockroach
       - key: MB_DB_TYPE
         value: "postgres"
-      # The connection string will be provided securely in the Render dashboard
       - key: MB_DB_CONNECTION_URI
         sync: false
