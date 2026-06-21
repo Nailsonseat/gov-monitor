@@ -1,7 +1,15 @@
 services:
   pipeline:
-    build: .
+    build:
+      context: .
+      network: host
     container_name: gov_monitor_pipeline
+    volumes:
+      # Mount only src so live code edits apply without overwriting the image .venv.
+      - ./src:/app/src
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - DB_CA_CERT=${DB_CA_CERT}
@@ -10,6 +18,8 @@ services:
       - TARGET_CITY=${TARGET_CITY}
       - TARGET_DISTRICT=${TARGET_DISTRICT}
       - LANGUAGE_TARGET=${LANGUAGE_TARGET}
+      - API_FETCH_INTERVAL_SECONDS=${API_FETCH_INTERVAL_SECONDS:-86400}
+      - MAX_ROWS_PER_API_CALL=${MAX_ROWS_PER_API_CALL:-100}
     restart: on-failure
 
   metabase:

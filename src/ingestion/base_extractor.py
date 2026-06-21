@@ -4,6 +4,9 @@ from src.config import Config
 
 
 class BaseGovExtractor:
+    # Subclasses set the API column key used for numeric parsing.
+    value_field: str = ""
+
     def __init__(self, resource_id: str, category: str, metric_name: str, unit: str, filter_column: Optional[str] = "District"):
         self.resource_id = resource_id
         self.category = category
@@ -13,41 +16,51 @@ class BaseGovExtractor:
         self.api_url = f"https://api.data.gov.in/resource/{self.resource_id}"
 
     def fetch_raw(self) -> List[Dict[str, Any]]:
-        print(f"-> Attempting live pull for [{self.metric_name}] via OGD API...")
+        """
+        Pull records from data.gov.in with server-side filters and a configurable
+        row cap (MAX_ROWS_PER_API_CALL) to bound each ingestion cycle.
+        """
+        row_limit = Config.MAX_ROWS_PER_API_CALL
+        print(
+            f"[INGESTION] Fetching signal [{self.metric_name}] "
+            f"(category={self.category}, limit={row_limit}) via OGD API..."
+        )
 
         params = {
             "api-key": Config.DATA_GOV_API_KEY,
             "format": "json",
-            "limit": 100
+            "limit": row_limit,
         }
 
-        # 1. Ask the API to filter on the server side
         if self.filter_column:
             filter_val = Config.TARGET_CITY if self.filter_column.lower() == "city" else Config.TARGET_DISTRICT
             params[f"filters[{self.filter_column}]"] = filter_val
 
-        # --- THE FIREWALL BYPASS HEADERS ---
-        # Mimics the exact successful request from your browser network tab
         headers = {
             "User-Agent": "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36",
             "Accept": "application/json, text/plain, */*",
             "Accept-Language": "en",
-            "Connection": "keep-alive"
+            "Connection": "keep-alive",
         }
 
         try:
-            # Inject the headers dictionary into the request
             response = requests.get(self.api_url, params=params, headers=headers, timeout=30)
             response.raise_for_status()
 
-            # Extract the 'records' array from the JSON payload
-            records = response.json().get("records", [])
+            payload = response.json()
+            total_available = payload.get("total", "unknown")
+            records = payload.get("records", [])
+
+            print(
+                f"[INGESTION] Signal [{self.metric_name}] API response: "
+                f"{len(records)} record(s) returned (total_available={total_available}, "
+                f"parsed_cap={row_limit})"
+            )
 
             if not records:
-                print(f"⚠️ Server returned an empty dataset for [{self.metric_name}].")
+                print(f"[INGESTION] WARNING: Empty dataset for [{self.metric_name}].")
                 return []
 
-            # 2. Python Client-Side Filtering
             if self.filter_column:
                 filter_val = Config.TARGET_CITY if self.filter_column.lower() == "city" else Config.TARGET_DISTRICT
                 filtered_records = [
@@ -56,15 +69,22 @@ class BaseGovExtractor:
                 ]
                 if filtered_records:
                     records = filtered_records
+                    print(
+                        f"[INGESTION] Signal [{self.metric_name}] client-side filter "
+                        f"on [{self.filter_column}]={filter_val}: {len(records)} row(s)"
+                    )
 
-            return records[:10]
+            return records[:row_limit]
 
         except requests.exceptions.ReadTimeout:
-            print(f"⚠️ CRITICAL: data.gov.in API timed out while fetching [{self.metric_name}]. Returning 0 rows.")
+            print(f"[INGESTION] CRITICAL: API timed out for [{self.metric_name}]. Returning 0 rows.")
             return []
         except requests.exceptions.RequestException as e:
-            print(f"⚠️ CRITICAL: Network/HTTP error fetching [{self.metric_name}]: {e}. Returning 0 rows.")
+            print(f"[INGESTION] CRITICAL: Network/HTTP error for [{self.metric_name}]: {e}. Returning 0 rows.")
             return []
         except Exception as e:
-            print(f"⚠️ CRITICAL: Unexpected parsing error for [{self.metric_name}]: {e}. Returning 0 rows.")
+            print(f"[INGESTION] CRITICAL: Unexpected parsing error for [{self.metric_name}]: {e}. Returning 0 rows.")
             return []
+
+    def parse_value(self, record: Dict[str, Any]) -> float:
+        raise NotImplementedError("Each signal extractor must implement parse_value().")

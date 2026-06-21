@@ -1,18 +1,13 @@
-FROM ghcr.io/astral-sh/uv:python3.11-alpine AS builder
-ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
-WORKDIR /app
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    uv sync --frozen --no-install-project --no-dev
+# syntax=docker/dockerfile:1
 
-FROM python:3.11-alpine
+FROM python:3.11-slim-bookworm
 WORKDIR /app
-COPY --from=builder /app/.venv /app/.venv
-ENV PATH="/app/.venv/bin:$PATH"
+
+# Copy only site-packages (portable). Do NOT copy .venv/bin — symlinks point at the host.
+COPY .venv/lib/python3.11/site-packages /app/deps
+ENV PYTHONPATH="/app:/app/deps"
+
 COPY src/ /app/src/
-COPY pyproject.toml /app/
-COPY README.md /app/
-RUN pip install -e .
+COPY pyproject.toml README.md /app/
 
 CMD ["python", "-m", "src.main"]

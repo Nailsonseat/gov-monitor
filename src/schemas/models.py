@@ -22,5 +22,7 @@ class ExecutiveSummary(Base):
     id = Column(Integer, primary_key=True, index=True)
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
     district = Column(String(100))
-    language = Column(String(20))
+    # Stores bilingual tag e.g. "English+Marathi" for combined summaries.
+    language = Column(String(30))
+    # Unbounded Text column holds the full English + Marathi block without truncation.
     summary_text = Column(Text)
