@@ -12,7 +12,7 @@ COPY --from=builder /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 COPY src/ /app/src/
 COPY pyproject.toml /app/
+COPY README.md /app/
 RUN pip install -e .
 
-# Corrected execution path to match your folder structure
 CMD ["python", "-m", "src.main"]
